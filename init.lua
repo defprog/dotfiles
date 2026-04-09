@@ -1,0 +1,651 @@
+--  Vim options
+----------------------------------------------------------------
+vim.api.nvim_set_keymap('n', '<Space>', '', {})
+vim.g.mapleader = ' '
+vim.keymap.set('n', '<Leader><Leader><Leader><Leader>', ':e ~/.config/nvim/init.lua<CR>', {})
+
+vim.opt.number = true
+vim.opt.cursorline = true
+
+vim.opt.shiftwidth = 4
+vim.opt.tabstop = 4
+vim.opt.ignorecase = true
+vim.opt.smartcase = true
+vim.opt.splitright = true
+vim.opt.splitbelow = true
+vim.opt.hlsearch = false
+vim.opt.termguicolors = true
+vim.opt.scrolloff = 7
+
+vim.opt.fileformats = { 'unix' }
+vim.opt.encoding = 'UTF-8'
+vim.opt.relativenumber = true
+vim.opt.swapfile = false
+
+vim.opt.shell = 'nu'
+vim.opt.shellcmdflag = '-c'
+vim.opt.shellquote = '\"'
+vim.opt.shellxquote = ''
+--vim.o.laststatus = 2
+--vim.o.cmdheight = 0
+
+vim.api.nvim_create_autocmd('FileType', {
+	pattern = 'json',
+	callback = function()
+		vim.opt_local.shiftwidth = 2
+		vim.opt_local.tabstop = 2
+	end
+})
+
+----------------------------------------------------------------
+-- 💤 Lazy config
+----------------------------------------------------------------
+local lazypath = vim.fn.stdpath('data') .. '/lazy/lazy.nvim'
+if not vim.loop.fs_stat(lazypath) then
+	vim.fn.system({
+		'git',
+		'clone',
+		'--filter=blob:none',
+		'https://github.com/folke/lazy.nvim.git',
+		'--branch=stable', -- latest stable release
+		lazypath,
+	})
+end
+vim.opt.rtp:prepend(lazypath)
+
+require('lazy').setup({
+	{ 'kylechui/nvim-surround' },
+	{ 'tpope/vim-repeat' },
+	{ 'tpope/vim-fugitive' },
+	{
+	  'nvim-treesitter/nvim-treesitter',
+	  branch = 'main',
+	  main = 'nvim-treesitter',
+	  opts = {
+		highlight = { enable = true },
+	  },
+	  init = function()
+		local ensure = { 'c', 'lua', 'vim', 'vimdoc', 'query', 'rust', 'python', 'cpp', 'go' }
+		local installed = require('nvim-treesitter').get_installed()
+		local to_install = vim.iter(ensure)
+		  :filter(function(p) return not vim.tbl_contains(installed, p) end)
+		  :totable()
+		if #to_install > 0 then
+		  require('nvim-treesitter').install(to_install)
+		end
+	  end,
+	},
+	{ 'chrismccord/bclose.vim' },
+	{ 'nvim-tree/nvim-web-devicons' },
+	{ 'milkypostman/vim-togglelist' },
+	{ 'mortepau/codicons.nvim' },
+	{ 'AckslD/nvim-neoclip.lua' },
+	{ 'EdenEast/nightfox.nvim' },
+	{ 'dasupradyumna/midnight.nvim',     lazy = false,   priority = 1000 },
+	{
+		"folke/tokyonight.nvim",
+		lazy = false,
+		priority = 1000,
+		opts = {},
+	},
+	{ 'nvim-neotest/nvim-nio' },
+	{ 'sQVe/sort.nvim' },
+	{ 'norcalli/nvim-colorizer.lua' },
+
+	-- LSP stuff
+	{ 'VonHeikemen/lsp-zero.nvim' },
+	{ 'neovim/nvim-lspconfig' },
+	{
+		"hrsh7th/nvim-cmp",
+		opts = function(_, opts)
+			opts.sources = opts.sources or {}
+			table.insert(opts.sources, {
+				name = "lazydev",
+				group_index = 0, -- set group index to 0 to skip loading LuaLS completions
+			})
+		end,
+	},
+	{ 'hrsh7th/cmp-nvim-lsp' },
+	{ 'hrsh7th/cmp-buffer' },
+	{ 'hrsh7th/cmp-path' },
+	{ 'hrsh7th/cmp-cmdline' },
+	{ 'hrsh7th/lspkind-nvim' },
+	{ 'williamboman/mason.nvim' },
+	{ 'williamboman/mason-lspconfig.nvim' },
+	{ 'jay-babu/mason-nvim-dap.nvim' },
+	{ 'L3MON4D3/LuaSnip' },
+	{
+		"folke/lazydev.nvim",
+		ft = "lua", -- only load on lua files
+		opts = {
+			library = {
+				-- See the configuration section for more details
+				-- Load luvit types when the `vim.uv` word is found
+				{ path = "${3rd}/luv/library", words = { "vim%.uv" } },
+			},
+		},
+	},
+
+	-- end LSP stuff
+
+	{
+		"folke/flash.nvim",
+		event = "VeryLazy",
+		---@type Flash.Config
+		opts = {
+			modes = {
+				char = {
+					enabled = false,
+				},
+			}
+		},
+		-- stylua: ignore
+		keys = {
+			{ "s",     mode = { "n", "x", "o" }, function() require("flash").jump() end,              desc = "Flash" },
+			{ "S",     mode = { "n", "x", "o" }, function() require("flash").treesitter() end,        desc = "Flash Treesitter" },
+			{ "r",     mode = "o",               function() require("flash").remote() end,            desc = "Remote Flash" },
+			{ "R",     mode = { "o", "x" },      function() require("flash").treesitter_search() end, desc = "Treesitter Search" },
+			{ "<c-s>", mode = { "c" },           function() require("flash").toggle() end,            desc = "Toggle Flash Search" },
+		},
+	},
+	{
+		"hedyhli/outline.nvim",
+		config = function()
+			vim.keymap.set("n", "<leader>a", "<cmd>Outline<CR>",
+				{ desc = "Toggle Outline" })
+			require("outline").setup {
+			}
+		end,
+	},
+	{
+		'dgagn/diagflow.nvim',
+		event = 'LspAttach',
+		opts = {},
+	},
+	{ 'smartpde/telescope-recent-files' },
+	{ 'nvim-telescope/telescope-symbols.nvim' },
+	{
+		'nvim-telescope/telescope.nvim',
+		tag = '0.1.5',
+		dependencies = { 'nvim-lua/plenary.nvim' },
+	},
+	{
+		'nvim-telescope/telescope-fzf-native.nvim',
+		build =
+		'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build',
+	},
+
+	{
+		'folke/trouble.nvim',
+		config = function()
+			local trouble = require("trouble.sources.telescope")
+			local telescope = require("telescope")
+			telescope.setup {
+				opts = {},
+				icons = true,
+				defaults = {
+					mappings = {
+						i = { ["<c-t>"] = trouble.open },
+						n = { ["<c-t>"] = trouble.open },
+					},
+				},
+			}
+		end
+	},
+
+	{
+		'stevearc/oil.nvim',
+		dependencies = { 'nvim-tree/nvim-web-devicons' },
+	},
+
+	{
+		'nvim-lualine/lualine.nvim',
+		dependencies = { 'nvim-tree/nvim-web-devicons' },
+	},
+
+	{
+		'numToStr/Comment.nvim',
+		opts = {},
+	},
+
+	{
+		'mfussenegger/nvim-dap',
+		ft = { 'rust' },
+		cmd = { 'DapContinue', 'DapBreakpoint' }
+	},
+	{
+		'rcarriga/nvim-dap-ui',
+		dependencies = { 'mfussenegger/nvim-dap' }
+	},
+	{
+		'https://git.sr.ht/~swaits/scratch.nvim',
+		lazy = true,
+		keys = {
+			{ '<leader>bs', '<cmd>Scratch<cr>',      desc = 'Scratch Buffer',         mode = 'n' },
+			{ '<leader>bS', '<cmd>ScratchSplit<cr>', desc = 'Scratch Buffer (split)', mode = 'n' },
+		},
+		cmd = {
+			'Scratch',
+			'ScratchSplit',
+		},
+		opts = {},
+	},
+	{
+		'NeogitOrg/neogit',
+		dependencies = {
+			'nvim-lua/plenary.nvim', -- required
+			'sindrets/diffview.nvim', -- optional - Diff integration
+			'nvim-telescope/telescope.nvim', -- optional
+		},
+		config = true
+	}
+})
+
+----------------------------------------------------------------
+-- 🎨 Theme
+----------------------------------------------------------------
+--require('nightfox').setup({})
+
+vim.opt.background = "dark"
+-- colorscheme tokyonight-night
+vim.cmd [[
+colorscheme tokyonight-night
+]]
+--vim.api.nvim_set_hl(0, "Normal", { bg = "#000000" })
+-- vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
+-- vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
+-- vim.api.nvim_set_hl(0, "NormalNC", { bg = "none" })
+
+-- local palette = require('nightfox.palette').load('duskfox')
+-- local yellow = palette.yellow.bright
+local palette = require("tokyonight.colors").setup({ style = "night" })
+local yellow = palette.yellow
+-- local yellow = '#edfc20'
+
+vim.api.nvim_command("hi clear FlashLabel")
+vim.api.nvim_set_hl(0, "FlashLabel",
+	{ fg = yellow, bg = "#000000", bold = true, default = false })
+
+require('lualine').setup {
+	extensions = {
+		'trouble', 'quickfix', 'oil', 'nvim-dap-ui', 'mason', 'lazy', 'fugitive'
+	},
+	sections = {
+		lualine_z = { 'encoding', 'fileformat', 'filetype' },
+		lualine_y = { 'location' },
+		lualine_x = { {
+			'buffers',
+			mode = 0,
+		} },
+		lualine_b = { { 'filename', path = 1 } },
+		lualine_c = {},
+	},
+}
+
+require('colorizer').setup()
+
+----------------------------------------------------------------
+-- small requires
+----------------------------------------------------------------
+require("nvim-surround").setup({
+	keymaps = {
+		visual = '<leader>s',
+		delete = '<leader>ds',
+		change = '<leader>cs',
+	},
+})
+
+require('oil').setup({
+	columns = {
+		"icon",
+		"permissions",
+		"size",
+		"mtime",
+	},
+})
+vim.keymap.set('n', '<leader><CR>', function()
+	local oil = require('oil')
+	local entry = oil.get_cursor_entry()
+	if not entry then return end
+
+	local path = oil.get_current_dir() .. '/' .. entry.name
+	if entry.type ~= 'directory' then
+		local opener = 'xdg-open'
+		vim.fn.jobstart({ opener, path }, { detach = true })
+	else
+		oil.select()
+	end
+end, { desc = 'Open file externally', buffer = true })
+
+
+vim.keymap.set('n', '-', '<CMD>Oil<CR>', { desc = 'Open parent directory' })
+
+--vim.cmd(':Copilot disable')
+
+require('trouble').setup()
+
+----------------------------------------------------------------
+-- 🌳 treesitter config
+----------------------------------------------------------------
+
+
+vim.keymap.set('n', '[p', ':lua JumpToXMLParent()<CR>', { noremap = true, silent = true })
+
+function JumpToXMLParent()
+	local ts_utils = require('nvim-treesitter.ts_utils')
+	local node = ts_utils.get_node_at_cursor()
+	if not node then return end
+
+	local parent = node:parent()
+	while parent do
+		if parent:type() == 'element' then
+			parent = parent:parent()
+			local start_row, start_col, _, _ = parent:range()
+			vim.api.nvim_win_set_cursor(0, { start_row + 1, start_col })
+			return
+		end
+		parent = parent:parent()
+	end
+end
+
+----------------------------------------------------------------
+-- 🔭 telescope config and keybindings
+----------------------------------------------------------------
+local actions = require('telescope.actions')
+local builtin = require('telescope.builtin')
+local themes = require('telescope.themes')
+local telescope = require('telescope')
+telescope.setup {
+	defaults = {
+		mappings = {
+			n = {
+				['<C-x>'] = actions.delete_buffer,
+				['<C-n>'] = actions.cycle_history_next,
+				['<C-p>'] = actions.cycle_history_prev,
+				['<C-a>'] = actions.select_all,
+			},
+			i = {
+				['<C-j>'] = actions.move_selection_next,
+				['<C-k>'] = actions.move_selection_previous,
+				['<C-n>'] = actions.cycle_history_next,
+				['<C-p>'] = actions.cycle_history_prev,
+			},
+		},
+		extensions = {
+			fzf = {
+				fuzzy = true,
+				override_generic_sorter = true,
+				override_file_sorter = true,
+				case_mode = "smart_case",
+			},
+		},
+	},
+	pickers = {
+		buffers = {
+			theme = 'ivy'
+		}
+	}
+};
+
+
+vim.keymap.set('n', '<leader>bb', builtin.builtin, {})
+vim.keymap.set('n', '<leader>ff', function()
+	builtin.find_files({ hidden = true })
+end, {})
+vim.keymap.set('n', '<leader>fd', function()
+	builtin.diagnostics({ sort_by = 'severity' })
+end, {})
+vim.keymap.set('n', '<leader>fG', builtin.git_files, {})
+vim.keymap.set('n', '<leader>fg', builtin.live_grep, {})
+vim.keymap.set('n', '<leader>fb', function()
+	builtin.buffers({
+		sort_lastused = true,
+		ignore_current_buffer = true,
+		initial_mode = 'normal',
+	})
+end, {})
+vim.keymap.set('n', '<leader>fh', builtin.help_tags, {})
+vim.keymap.set('n', '<leader>f.', builtin.current_buffer_fuzzy_find, {})
+vim.keymap.set('n', '<leader>fl', ':Telescope resume<CR>', {})
+vim.keymap.set('n', '<leader>fc', ':Telescope neoclip theme=ivy<CR>', {})
+vim.keymap.set('n', '<leader>fm', ':Telescope marks theme=ivy<CR>', {})
+vim.keymap.set('n', '<leader>fs', ':Telescope symbols<CR>', {})
+vim.keymap.set('n', '<leader>fk', ':Telescope keymaps<CR>', {})
+vim.api.nvim_set_keymap("n", "<Leader>fr",
+	[[<cmd>lua require('telescope').extensions.recent_files.pick()<CR>]],
+	{ noremap = true, silent = true })
+
+telescope.load_extension('fzf')
+telescope.load_extension('recent_files')
+require('neoclip').setup({
+	keys = {
+		telescope = {
+			i = {
+				paste_behind = {}
+			}
+		},
+	},
+})
+
+----------------------------------------------------------------
+-- jump buffers
+----------------------------------------------------------------
+local buffer_map = {}
+vim.keymap.set('n', '<leader>m', function()
+	local key = vim.fn.nr2char(vim.fn.getchar())
+	buffer_map[key] = vim.fn.bufnr("%")
+end)
+
+vim.keymap.set('n', '<leader>j', function()
+	local key = vim.fn.nr2char(vim.fn.getchar())
+	if buffer_map[key] then
+		vim.cmd('buffer ' .. buffer_map[key])
+	end
+end)
+
+----------------------------------------------------------------
+-- 🦀 rust debug config and keybindings
+----------------------------------------------------------------
+function _G.cargo_build()
+	vim.cmd('split | terminal cargo build')
+end
+
+function _G.cargo_build_release()
+	vim.cmd('split | terminal cargo build --release')
+end
+
+function _G.cargo_run_release()
+	vim.cmd('split | terminal cargo run')
+	vim.cmd(':startinsert')
+end
+
+function _G.cargo_test()
+	vim.cmd('split | terminal cargo test -- --nocapture')
+	vim.cmd(':startinsert')
+end
+
+function _G.cargo_clippy_pedantic()
+	vim.cmd('split | terminal cargo clippy --all -- -W clippy::pedantic')
+end
+
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = "rust",
+	callback = function()
+		vim.api.nvim_buf_set_keymap(0, 'n', '<F6>', ':lua cargo_build()<CR>', { noremap = true, silent = true })
+		vim.api.nvim_buf_set_keymap(0, 'n', '<Leader><F6>', ':lua cargo_build_release()<CR>',
+			{ noremap = true, silent = true })
+		vim.api.nvim_buf_set_keymap(0, 'n', '<Leader>r', ':lua cargo_run_release()<CR>',
+			{ noremap = true, silent = true })
+		vim.api.nvim_buf_set_keymap(0, 'n', '<Leader><Leader>t', ':lua cargo_test()<CR>',
+			{ noremap = true, silent = true })
+		vim.api.nvim_buf_set_keymap(0, 'n', '<Leader><Leader>c', ':lua cargo_clippy_pedantic()<CR>',
+			{ noremap = true, silent = true })
+	end,
+})
+
+-- close term when process exits
+-- vim.api.nvim_create_autocmd("TermClose", {
+-- 	pattern = "*",
+-- 	callback = function(opts)
+-- 		-- close the buffer when the job ends
+-- 		vim.api.nvim_buf_delete(opts.buf, { force = true })
+-- 	end,
+-- })
+
+----------------------------------------------------------------
+-- 󰒋 LSP Zero config
+----------------------------------------------------------------
+local lsp_zero = require('lsp-zero')
+
+lsp_zero.on_attach(function(_, bufnr)
+	-- see :help lsp-zero-keybindings
+	lsp_zero.default_keymaps({ buffer = bufnr })
+end)
+
+lsp_zero.format_on_save({
+	format_opts = {
+		async = false,
+		timeout_ms = 10000,
+	},
+	servers = {
+		['rust_analyzer'] = { 'rust' },
+		['lua_ls'] = { 'lua' },
+	}
+})
+
+
+require("mason").setup()
+require('mason-lspconfig').setup({
+	ensure_installed = { 'lua_ls', 'rust_analyzer', 'pylsp', 'jsonls', 'clangd' },
+	handlers = {
+		lsp_zero.default_setup,
+		rust_analyzer = function()
+			require('lspconfig').rust_analyzer.setup({
+				settings = {
+					['rust-analyzer'] = {
+						checkOnSave = {
+							command = 'clippy'
+						},
+						cargo = {
+							allFeatures = true,
+							buildsScripts = { enable = true },
+						},
+						procMacro = {
+							enable = true,
+						},
+					},
+				},
+			})
+		end,
+	},
+})
+
+require('lspconfig').lua_ls.setup({})
+
+
+----------------------------------------------------------------
+-- 󱐀 nvim-cmp bindings
+----------------------------------------------------------------
+local cmp = require('cmp')
+cmp.setup({
+	completion = {
+		autocomplete = false
+	},
+	mapping = cmp.mapping.preset.insert({
+		['<C-s>'] = cmp.mapping.complete(),
+		['<C-k>'] = cmp.mapping.select_prev_item(),
+		['<C-j>'] = cmp.mapping.select_next_item(),
+		['<C-u>'] = cmp.mapping.scroll_docs(-4),
+		['<C-d>'] = cmp.mapping.scroll_docs(4),
+		['<C-e>'] = cmp.mapping.close(),
+		['<CR>'] = cmp.mapping.confirm({ select = false }),
+	}),
+	sources = cmp.config.sources({
+		{
+			name = "nvim_lsp",
+			entry_filter = function(entry, _)
+				return require("cmp").lsp.CompletionItemKind.Snippet ~= entry:get_kind()
+			end
+		},
+	}),
+})
+
+----------------------------------------------------------------
+--   DAP config
+----------------------------------------------------------------
+local dap = require('dap')
+local dapui = require('dapui')
+dapui.setup()
+dap.listeners.after.event_initialized['dapui_config'] = function()
+	dapui.open()
+end
+dap.listeners.before.event_terminated['dapui_config'] = function()
+	dapui.close()
+end
+dap.listeners.before.event_exited['dapui_config'] = function()
+	dapui.close()
+end
+
+require('mason-nvim-dap').setup({
+	ensure_installed = { 'codelldb' },
+	handlers = {},
+})
+
+vim.keymap.set('n', '<F5>', ':DapContinue<CR>')
+vim.keymap.set('n', '<F10>', ':DapStepOver<CR>')
+vim.keymap.set('n', '<Leader><F10>', ':DapStepInto<CR>')
+vim.keymap.set('n', '<F12>', ':DapStepOut<CR>')
+vim.keymap.set('n', '<F9>', ':DapToggleBreakpoint<CR>')
+vim.keymap.set('n', '<Leader>x', ':DapTerminate<CR>:lua require("dapui").close()<CR>')
+
+vim.fn.sign_define('DapBreakpoint', { text = '⭕', texthl = '', })
+vim.fn.sign_define('DapStopped', { text = '🔴', texthl = '', })
+
+----------------------------------------------------------------
+-- After
+----------------------------------------------------------------
+vim.cmd('autocmd BufNewFile,BufRead * setlocal formatoptions-=ro')
+vim.cmd([[autocmd FileType * set formatoptions-=ro]])
+
+----------------------------------------------------------------
+--   other keybindings
+----------------------------------------------------------------
+vim.keymap.set('n', '<C-n>', ':cnext<CR>', {})
+vim.keymap.set('n', '<C-p>', ':cprev<CR>', {})
+vim.keymap.set('n', '<Leader>bd', ':bd<CR>', {})
+vim.keymap.set('n', '<Leader>bD', ':bd!<CR>', {})
+vim.keymap.set('n', '<Leader>bc', ':Bclose<CR>', {})
+vim.keymap.set('n', '<Leader>bC', ':Bclose!<CR>', {})
+
+vim.keymap.set('n', '<Leader>y', '"+y')
+vim.keymap.set('v', '<Leader>y', '"+y')
+vim.keymap.set('n', '<Leader>p', '"+p')
+vim.keymap.set('v', '<Leader>p', '"+p')
+vim.keymap.set('n', '<Leader>P', '"+P')
+vim.keymap.set('v', '<Leader>P', '"+P')
+
+vim.keymap.set('n', 'J', 'mzJ`z')
+vim.keymap.set('n', 'n', 'nzzzv')
+vim.keymap.set('n', 'N', 'Nzzzv')
+
+vim.keymap.set('n', '<Leader>t', ':Trouble diagnostics toggle focus=true<CR>')
+vim.keymap.set('n', '<Leader>w', '<C-w>')
+vim.keymap.set({ 'n', 'i' }, '<F1>', '<Escape>')
+vim.api.nvim_set_keymap('t', '<ESC>', '<C-\\><C-n>', { noremap = true })
+vim.keymap.set('n', '<Leader>;', ':blast')
+
+vim.keymap.set('v', 'K', ":m '<-2<CR>gv=gv")
+vim.keymap.set('v', 'J', ":m '>+1<CR>gv=gv")
+
+vim.keymap.set('n', '<Leader>ql', ':call ToggleLocationList()<CR>')
+vim.keymap.set('n', '<Leader>qf', ':call ToggleQuickfixList()<CR>')
+vim.keymap.set('n', '<Leader>qc', ':cex []<CR>')
+vim.keymap.set('n', '<Right>', ':vertical resize +5<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<Left>', ':vertical resize -5<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<Up>', ':horizontal resize -5<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<Down>', ':horizontal resize +5<CR>', { noremap = true, silent = true })
+
+vim.keymap.set('n', '<Leader><Leader>s', ':vsplit | term<CR>')
+vim.keymap.set('n', '<Leader><Leader>b', ':b#<CR>')
+
+vim.keymap.set('n', '[T', 'tavatov', { noremap = true, silent = true })
