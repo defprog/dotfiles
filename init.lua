@@ -67,21 +67,15 @@ require('lazy').setup({
 	{ 'tpope/vim-repeat' },
 	{ 'tpope/vim-fugitive' },
 	{
-		'nvim-treesitter/nvim-treesitter',
-		branch = 'main',
-		main = 'nvim-treesitter',
-		opts = {
-			highlight = { enable = true },
-		},
-		init = function()
-			local ensure = { 'c', 'lua', 'vim', 'vimdoc', 'query', 'rust', 'python', 'cpp', 'go' }
-			local installed = require('nvim-treesitter').get_installed()
-			local to_install = vim.iter(ensure)
-				:filter(function(p) return not vim.tbl_contains(installed, p) end)
-				:totable()
-			if #to_install > 0 then
-				require('nvim-treesitter').install(to_install)
-			end
+		'neovim-treesitter/nvim-treesitter',
+		dependencies = { 'nvim-lua/plenary.nvim' },
+		lazy = false,
+		build = ':TSUpdate',
+		config = function()
+			-- install is a no-op for already-installed parsers
+			require('nvim-treesitter').install({
+				'c', 'lua', 'vim', 'vimdoc', 'query', 'rust', 'python', 'cpp', 'go'
+			})
 		end,
 	},
 	{ 'chrismccord/bclose.vim' },
@@ -319,12 +313,16 @@ require('trouble').setup()
 -- 🌳 treesitter config
 ----------------------------------------------------------------
 
+-- enable highlighting for any filetype that has a parser installed
+vim.api.nvim_create_autocmd('FileType', {
+	pattern = '*',
+	callback = function() pcall(vim.treesitter.start) end,
+})
 
 vim.keymap.set('n', '[p', ':lua JumpToXMLParent()<CR>', { noremap = true, silent = true })
 
 function JumpToXMLParent()
-	local ts_utils = require('nvim-treesitter.ts_utils')
-	local node = ts_utils.get_node_at_cursor()
+	local node = vim.treesitter.get_node()
 	if not node then return end
 
 	local parent = node:parent()
