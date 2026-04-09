@@ -245,9 +245,6 @@ vim.cmd [[
 colorscheme tokyonight-night
 ]]
 --vim.api.nvim_set_hl(0, "Normal", { bg = "#000000" })
--- vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
--- vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
--- vim.api.nvim_set_hl(0, "NormalNC", { bg = "none" })
 
 -- local palette = require('nightfox.palette').load('duskfox')
 -- local yellow = palette.yellow.bright
