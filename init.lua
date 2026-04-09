@@ -54,26 +54,35 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 require('lazy').setup({
-	{ 'kylechui/nvim-surround' },
+	{
+		'kylechui/nvim-surround',
+		event = 'VeryLazy',
+		config = function()
+			require('nvim-surround').setup()
+			vim.keymap.set('x', '<leader>s', '<Plug>(nvim-surround-visual)')
+			vim.keymap.set('n', '<leader>ds', '<Plug>(nvim-surround-delete)')
+			vim.keymap.set('n', '<leader>cs', '<Plug>(nvim-surround-change)')
+		end,
+	},
 	{ 'tpope/vim-repeat' },
 	{ 'tpope/vim-fugitive' },
 	{
-	  'nvim-treesitter/nvim-treesitter',
-	  branch = 'main',
-	  main = 'nvim-treesitter',
-	  opts = {
-		highlight = { enable = true },
-	  },
-	  init = function()
-		local ensure = { 'c', 'lua', 'vim', 'vimdoc', 'query', 'rust', 'python', 'cpp', 'go' }
-		local installed = require('nvim-treesitter').get_installed()
-		local to_install = vim.iter(ensure)
-		  :filter(function(p) return not vim.tbl_contains(installed, p) end)
-		  :totable()
-		if #to_install > 0 then
-		  require('nvim-treesitter').install(to_install)
-		end
-	  end,
+		'nvim-treesitter/nvim-treesitter',
+		branch = 'main',
+		main = 'nvim-treesitter',
+		opts = {
+			highlight = { enable = true },
+		},
+		init = function()
+			local ensure = { 'c', 'lua', 'vim', 'vimdoc', 'query', 'rust', 'python', 'cpp', 'go' }
+			local installed = require('nvim-treesitter').get_installed()
+			local to_install = vim.iter(ensure)
+				:filter(function(p) return not vim.tbl_contains(installed, p) end)
+				:totable()
+			if #to_install > 0 then
+				require('nvim-treesitter').install(to_install)
+			end
+		end,
 	},
 	{ 'chrismccord/bclose.vim' },
 	{ 'nvim-tree/nvim-web-devicons' },
@@ -81,7 +90,7 @@ require('lazy').setup({
 	{ 'mortepau/codicons.nvim' },
 	{ 'AckslD/nvim-neoclip.lua' },
 	{ 'EdenEast/nightfox.nvim' },
-	{ 'dasupradyumna/midnight.nvim',     lazy = false,   priority = 1000 },
+	{ 'dasupradyumna/midnight.nvim', lazy = false, priority = 1000 },
 	{
 		"folke/tokyonight.nvim",
 		lazy = false,
@@ -90,26 +99,15 @@ require('lazy').setup({
 	},
 	{ 'nvim-neotest/nvim-nio' },
 	{ 'sQVe/sort.nvim' },
-	{ 'norcalli/nvim-colorizer.lua' },
+	{ 'catgoose/nvim-colorizer.lua' },
 
 	-- LSP stuff
-	{ 'VonHeikemen/lsp-zero.nvim' },
 	{ 'neovim/nvim-lspconfig' },
-	{
-		"hrsh7th/nvim-cmp",
-		opts = function(_, opts)
-			opts.sources = opts.sources or {}
-			table.insert(opts.sources, {
-				name = "lazydev",
-				group_index = 0, -- set group index to 0 to skip loading LuaLS completions
-			})
-		end,
-	},
+	{ 'hrsh7th/nvim-cmp' },
 	{ 'hrsh7th/cmp-nvim-lsp' },
 	{ 'hrsh7th/cmp-buffer' },
 	{ 'hrsh7th/cmp-path' },
 	{ 'hrsh7th/cmp-cmdline' },
-	{ 'hrsh7th/lspkind-nvim' },
 	{ 'williamboman/mason.nvim' },
 	{ 'williamboman/mason-lspconfig.nvim' },
 	{ 'jay-babu/mason-nvim-dap.nvim' },
@@ -287,13 +285,6 @@ require('colorizer').setup()
 ----------------------------------------------------------------
 -- small requires
 ----------------------------------------------------------------
-require("nvim-surround").setup({
-	keymaps = {
-		visual = '<leader>s',
-		delete = '<leader>ds',
-		change = '<leader>cs',
-	},
-})
 
 require('oil').setup({
 	columns = {
@@ -493,54 +484,67 @@ vim.api.nvim_create_autocmd("FileType", {
 -- })
 
 ----------------------------------------------------------------
--- 󰒋 LSP Zero config
+-- 🔌 LSP config (native 0.11+)
 ----------------------------------------------------------------
-local lsp_zero = require('lsp-zero')
 
-lsp_zero.on_attach(function(_, bufnr)
-	-- see :help lsp-zero-keybindings
-	lsp_zero.default_keymaps({ buffer = bufnr })
-end)
-
-lsp_zero.format_on_save({
-	format_opts = {
-		async = false,
-		timeout_ms = 10000,
-	},
-	servers = {
-		['rust_analyzer'] = { 'rust' },
-		['lua_ls'] = { 'lua' },
-	}
+-- Default capabilities for all servers (nvim-cmp integration)
+vim.lsp.config('*', {
+	capabilities = require('cmp_nvim_lsp').default_capabilities(),
 })
 
+-- Server-specific config
+vim.lsp.config('rust_analyzer', {
+	settings = {
+		['rust-analyzer'] = {
+			checkOnSave = true,
+			check = { command = 'clippy' },
+			cargo = {
+				allFeatures = true,
+				buildScripts = { enable = true },
+			},
+			procMacro = { enable = true },
+		},
+	},
+})
 
-require("mason").setup()
+require('mason').setup()
 require('mason-lspconfig').setup({
 	ensure_installed = { 'lua_ls', 'rust_analyzer', 'pylsp', 'jsonls', 'clangd' },
-	handlers = {
-		lsp_zero.default_setup,
-		rust_analyzer = function()
-			require('lspconfig').rust_analyzer.setup({
-				settings = {
-					['rust-analyzer'] = {
-						checkOnSave = {
-							command = 'clippy'
-						},
-						cargo = {
-							allFeatures = true,
-							buildsScripts = { enable = true },
-						},
-						procMacro = {
-							enable = true,
-						},
-					},
-				},
-			})
-		end,
-	},
+	automatic_enable = false,
 })
 
-require('lspconfig').lua_ls.setup({})
+vim.lsp.enable({ 'lua_ls', 'rust_analyzer', 'pylsp', 'jsonls', 'clangd' })
+
+-- Keymaps and format-on-save on attach
+vim.api.nvim_create_autocmd('LspAttach', {
+	callback = function(args)
+		local bufnr = args.buf
+		local client = vim.lsp.get_client_by_id(args.data.client_id)
+		if not client then return end
+
+		-- grn, gra, grr, gri, grd, K, [d/]d are built-in defaults in 0.11+
+		vim.keymap.set('n', 'gd', vim.lsp.buf.definition, { buffer = bufnr, desc = 'Go to definition' })
+		vim.keymap.set('n', 'go', vim.lsp.buf.type_definition, { buffer = bufnr, desc = 'Go to type definition' })
+		vim.keymap.set('n', 'gs', vim.lsp.buf.signature_help, { buffer = bufnr, desc = 'Signature help' })
+		vim.keymap.set('n', '<F4>', vim.lsp.buf.code_action, { buffer = bufnr, desc = 'Code action' })
+
+		-- Format on save for specific servers
+		local format_servers = { rust_analyzer = true, lua_ls = true }
+		if format_servers[client.name] then
+			vim.api.nvim_create_autocmd('BufWritePre', {
+				buffer = bufnr,
+				callback = function()
+					vim.lsp.buf.format({
+						bufnr = bufnr,
+						async = false,
+						timeout_ms = 10000,
+						filter = function(c) return c.name == client.name end,
+					})
+				end,
+			})
+		end
+	end,
+})
 
 
 ----------------------------------------------------------------
@@ -561,10 +565,11 @@ cmp.setup({
 		['<CR>'] = cmp.mapping.confirm({ select = false }),
 	}),
 	sources = cmp.config.sources({
+		{ name = 'lazydev', group_index = 0 },
 		{
-			name = "nvim_lsp",
+			name = 'nvim_lsp',
 			entry_filter = function(entry, _)
-				return require("cmp").lsp.CompletionItemKind.Snippet ~= entry:get_kind()
+				return vim.lsp.protocol.CompletionItemKind.Snippet ~= entry:get_kind()
 			end
 		},
 	}),
