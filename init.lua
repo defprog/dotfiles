@@ -1,6 +1,6 @@
 --  Vim options
 ----------------------------------------------------------------
-vim.api.nvim_set_keymap('n', '<Space>', '', {})
+vim.keymap.set('n', '<Space>', '', {})
 vim.g.mapleader = ' '
 vim.keymap.set('n', '<Leader><Leader><Leader><Leader>', ':e ~/.config/nvim/init.lua<CR>', {})
 
@@ -163,7 +163,7 @@ require('lazy').setup({
 	{ 'nvim-telescope/telescope-symbols.nvim' },
 	{
 		'nvim-telescope/telescope.nvim',
-		tag = '0.1.5',
+		branch = '0.1.x',
 		dependencies = { 'nvim-lua/plenary.nvim' },
 	},
 	{
@@ -200,10 +200,6 @@ require('lazy').setup({
 		dependencies = { 'nvim-tree/nvim-web-devicons' },
 	},
 
-	{
-		'numToStr/Comment.nvim',
-		opts = {},
-	},
 
 	{
 		'mfussenegger/nvim-dap',
@@ -259,7 +255,7 @@ local palette = require("tokyonight.colors").setup({ style = "night" })
 local yellow = palette.yellow
 -- local yellow = '#edfc20'
 
-vim.api.nvim_command("hi clear FlashLabel")
+vim.cmd("hi clear FlashLabel")
 vim.api.nvim_set_hl(0, "FlashLabel",
 	{ fg = yellow, bg = "#000000", bold = true, default = false })
 
@@ -347,7 +343,6 @@ end
 ----------------------------------------------------------------
 local actions = require('telescope.actions')
 local builtin = require('telescope.builtin')
-local themes = require('telescope.themes')
 local telescope = require('telescope')
 telescope.setup {
 	defaults = {
@@ -405,9 +400,9 @@ vim.keymap.set('n', '<leader>fc', ':Telescope neoclip theme=ivy<CR>', {})
 vim.keymap.set('n', '<leader>fm', ':Telescope marks theme=ivy<CR>', {})
 vim.keymap.set('n', '<leader>fs', ':Telescope symbols<CR>', {})
 vim.keymap.set('n', '<leader>fk', ':Telescope keymaps<CR>', {})
-vim.api.nvim_set_keymap("n", "<Leader>fr",
-	[[<cmd>lua require('telescope').extensions.recent_files.pick()<CR>]],
-	{ noremap = true, silent = true })
+vim.keymap.set('n', '<Leader>fr', function()
+	require('telescope').extensions.recent_files.pick()
+end, { silent = true })
 
 telescope.load_extension('fzf')
 telescope.load_extension('recent_files')
@@ -465,15 +460,11 @@ end
 vim.api.nvim_create_autocmd("FileType", {
 	pattern = "rust",
 	callback = function()
-		vim.api.nvim_buf_set_keymap(0, 'n', '<F6>', ':lua cargo_build()<CR>', { noremap = true, silent = true })
-		vim.api.nvim_buf_set_keymap(0, 'n', '<Leader><F6>', ':lua cargo_build_release()<CR>',
-			{ noremap = true, silent = true })
-		vim.api.nvim_buf_set_keymap(0, 'n', '<Leader>r', ':lua cargo_run_release()<CR>',
-			{ noremap = true, silent = true })
-		vim.api.nvim_buf_set_keymap(0, 'n', '<Leader><Leader>t', ':lua cargo_test()<CR>',
-			{ noremap = true, silent = true })
-		vim.api.nvim_buf_set_keymap(0, 'n', '<Leader><Leader>c', ':lua cargo_clippy_pedantic()<CR>',
-			{ noremap = true, silent = true })
+		vim.keymap.set('n', '<F6>', cargo_build, { buffer = true, silent = true })
+		vim.keymap.set('n', '<Leader><F6>', cargo_build_release, { buffer = true, silent = true })
+		vim.keymap.set('n', '<Leader>r', cargo_run_release, { buffer = true, silent = true })
+		vim.keymap.set('n', '<Leader><Leader>t', cargo_test, { buffer = true, silent = true })
+		vim.keymap.set('n', '<Leader><Leader>c', cargo_clippy_pedantic, { buffer = true, silent = true })
 	end,
 })
 
@@ -612,8 +603,10 @@ vim.fn.sign_define('DapStopped', { text = '🔴', texthl = '', })
 ----------------------------------------------------------------
 -- After
 ----------------------------------------------------------------
-vim.cmd('autocmd BufNewFile,BufRead * setlocal formatoptions-=ro')
-vim.cmd([[autocmd FileType * set formatoptions-=ro]])
+vim.api.nvim_create_autocmd({ 'BufNewFile', 'BufRead', 'FileType' }, {
+	pattern = '*',
+	callback = function() vim.opt_local.formatoptions:remove({ 'r', 'o' }) end,
+})
 
 ----------------------------------------------------------------
 --   other keybindings
@@ -639,8 +632,7 @@ vim.keymap.set('n', 'N', 'Nzzzv')
 vim.keymap.set('n', '<Leader>t', ':Trouble diagnostics toggle focus=true<CR>')
 vim.keymap.set('n', '<Leader>w', '<C-w>')
 vim.keymap.set({ 'n', 'i' }, '<F1>', '<Escape>')
-vim.api.nvim_set_keymap('t', '<ESC>', '<C-\\><C-n>', { noremap = true })
-vim.keymap.set('n', '<Leader>;', ':blast')
+vim.keymap.set('t', '<ESC>', '<C-\\><C-n>', { noremap = true })
 
 vim.keymap.set('v', 'K', ":m '<-2<CR>gv=gv")
 vim.keymap.set('v', 'J', ":m '>+1<CR>gv=gv")
@@ -657,3 +649,4 @@ vim.keymap.set('n', '<Leader><Leader>s', ':vsplit | term<CR>')
 vim.keymap.set('n', '<Leader><Leader>b', ':b#<CR>')
 
 vim.keymap.set('n', '[T', 'tavatov', { noremap = true, silent = true })
+
