@@ -519,6 +519,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
 		vim.keymap.set('n', 'go', vim.lsp.buf.type_definition, { buffer = bufnr, desc = 'Go to type definition' })
 		vim.keymap.set('n', 'gs', vim.lsp.buf.signature_help, { buffer = bufnr, desc = 'Signature help' })
 		vim.keymap.set('n', '<F4>', vim.lsp.buf.code_action, { buffer = bufnr, desc = 'Code action' })
+		vim.keymap.set('v', '<F4>', vim.lsp.buf.code_action, { buffer = bufnr, desc = 'Code action' })
 
 		-- Format on save for specific servers
 		local format_servers = { rust_analyzer = true, lua_ls = true }
