@@ -163,13 +163,14 @@ require('lazy').setup({
 	{ 'nvim-telescope/telescope-symbols.nvim' },
 	{
 		'nvim-telescope/telescope.nvim',
-		branch = '0.1.x',
-		dependencies = { 'nvim-lua/plenary.nvim' },
-	},
-	{
-		'nvim-telescope/telescope-fzf-native.nvim',
-		build =
-		'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build',
+		version = '*',
+		dependencies = {
+			'nvim-lua/plenary.nvim',
+			{
+				'nvim-telescope/telescope-fzf-native.nvim',
+				build = 'make',
+			},
+		},
 	},
 
 	{
@@ -375,13 +376,13 @@ telescope.setup {
 
 
 vim.keymap.set('n', '<leader>bb', builtin.builtin, {})
-vim.keymap.set('n', '<leader>ff', function()
+vim.keymap.set('n', '<leader>fF', function()
 	builtin.find_files({ hidden = true })
 end, {})
 vim.keymap.set('n', '<leader>fd', function()
 	builtin.diagnostics({ sort_by = 'severity' })
 end, {})
-vim.keymap.set('n', '<leader>fG', builtin.git_files, {})
+vim.keymap.set('n', '<leader>ff', builtin.git_files, {})
 vim.keymap.set('n', '<leader>fg', builtin.live_grep, {})
 vim.keymap.set('n', '<leader>fb', function()
 	builtin.buffers({
@@ -646,4 +647,3 @@ vim.keymap.set('n', '<Leader><Leader>s', ':vsplit | term<CR>')
 vim.keymap.set('n', '<Leader><Leader>b', ':b#<CR>')
 
 vim.keymap.set('n', '[T', 'tavatov', { noremap = true, silent = true })
-
