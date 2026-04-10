@@ -1,0 +1,6 @@
+show=drun
+width=50%
+height=50%
+prompt=Search Applications
+allow_images=true
+image_size=24
