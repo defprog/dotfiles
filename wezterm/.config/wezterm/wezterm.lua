@@ -3,7 +3,7 @@ local config = wezterm.config_builder()
 
 
 config.default_prog       = { '/usr/bin/nu' }
-config.window_decorations = 'RESIZE'
+config.window_decorations = 'NONE'
 config.color_scheme       = 'tokyonight_night'
 -- config.colors             = {
 -- 	background = "#000000",

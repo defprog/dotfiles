@@ -73,13 +73,14 @@ require('lazy').setup({
 	{ 'tpope/vim-fugitive' },
 	{
 		'neovim-treesitter/nvim-treesitter',
-		dependencies = { 'nvim-lua/plenary.nvim' },
+		dependencies = { 'nvim-lua/plenary.nvim', 'neovim-treesitter/treesitter-parser-registry' },
 		lazy = false,
 		build = ':TSUpdate',
 		config = function()
 			-- install is a no-op for already-installed parsers
 			require('nvim-treesitter').install({
-				'c', 'lua', 'vim', 'vimdoc', 'query', 'rust', 'python', 'cpp', 'go'
+				'c', 'lua', 'vim', 'vimdoc', 'query', 'rust', 'python', 'cpp', 'go', 'javascript', 'typescript', 'ecma',
+				'jsx'
 			})
 		end,
 	},
@@ -101,7 +102,6 @@ require('lazy').setup({
 	{ 'catgoose/nvim-colorizer.lua' },
 
 	-- LSP stuff
-	{ 'neovim/nvim-lspconfig' },
 	{ 'hrsh7th/nvim-cmp' },
 	{ 'hrsh7th/cmp-nvim-lsp' },
 	{ 'hrsh7th/cmp-buffer' },
@@ -109,7 +109,9 @@ require('lazy').setup({
 	{ 'hrsh7th/cmp-cmdline' },
 	{ 'williamboman/mason.nvim' },
 	{ 'williamboman/mason-lspconfig.nvim' },
+	{ 'WhoIsSethDaniel/mason-tool-installer.nvim' },
 	{ 'jay-babu/mason-nvim-dap.nvim' },
+	{ 'stevearc/conform.nvim' },
 	{ 'L3MON4D3/LuaSnip' },
 	{
 		"folke/lazydev.nvim",
@@ -232,7 +234,7 @@ require('lazy').setup({
 			'nvim-telescope/telescope.nvim', -- optional
 		},
 		config = true
-	}
+	},
 })
 
 ----------------------------------------------------------------
@@ -499,13 +501,37 @@ vim.lsp.config('rust_analyzer', {
 	},
 })
 
+-- Set no_format = true to disable LSP format-on-save (e.g. when conform handles it instead).
+local lsp_servers = {
+	lua_ls        = {},
+	rust_analyzer = {},
+	pylsp         = {},
+	jsonls        = { no_format = true },
+	clangd        = {},
+	ts_ls         = { no_format = true },
+}
+
+-- Non-LSP mason tools (formatters, DAP adapters, etc.)
+local mason_tools = { 'prettier', 'codelldb' }
+
 require('mason').setup()
 require('mason-lspconfig').setup({
-	ensure_installed = { 'lua_ls', 'rust_analyzer', 'pylsp', 'jsonls', 'clangd' },
+	ensure_installed = vim.tbl_keys(lsp_servers),
 	automatic_enable = false,
 })
+require('mason-tool-installer').setup({ ensure_installed = mason_tools })
 
-vim.lsp.enable({ 'lua_ls', 'rust_analyzer', 'pylsp', 'jsonls', 'clangd' })
+require('conform').setup({
+	formatters_by_ft = {
+		json       = { 'prettier' },
+		jsonc      = { 'prettier' },
+		javascript = { 'prettier' },
+		typescript = { 'prettier' },
+	},
+	format_on_save = { timeout_ms = 5000 },
+})
+
+vim.lsp.enable(vim.tbl_keys(lsp_servers))
 
 -- Keymaps and format-on-save on attach
 vim.api.nvim_create_autocmd('LspAttach', {
@@ -521,9 +547,8 @@ vim.api.nvim_create_autocmd('LspAttach', {
 		vim.keymap.set('n', '<F4>', vim.lsp.buf.code_action, { buffer = bufnr, desc = 'Code action' })
 		vim.keymap.set('v', '<F4>', vim.lsp.buf.code_action, { buffer = bufnr, desc = 'Code action' })
 
-		-- Format on save for specific servers
-		local format_servers = { rust_analyzer = true, lua_ls = true }
-		if format_servers[client.name] then
+		local server = lsp_servers[client.name]
+		if server and not server.no_format then
 			vim.api.nvim_create_autocmd('BufWritePre', {
 				buffer = bufnr,
 				callback = function()

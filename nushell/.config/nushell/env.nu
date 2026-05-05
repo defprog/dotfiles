@@ -18,5 +18,5 @@
 # them for future reference.
 
 $env.LS_COLORS = (vivid generate tokyonight-night)
-$env.PATH = ($env.PATH | append ~/.cargo/bin)
+$env.PATH = ($env.PATH | append ~/.cargo/bin | append ~/.local/bin)
 $env.EDITOR = 'nvim'

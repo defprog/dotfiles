@@ -1,0 +1,19 @@
+command = /usr/bin/nu
+theme = TokyoNight Night
+font-family = Hack Nerd Font
+font-size = 9
+window-decoration = false
+window-inherit-working-directory = false
+working-directory = home
+
+keybind = alt+left=resize_split:left,20
+keybind = alt+right=resize_split:right,20
+keybind = alt+up=resize_split:up,20
+keybind = alt+down=resize_split:down,20
+keybind = alt+enter=new_split:right
+keybind = alt+shift+enter=new_split:down
+keybind = alt+h=goto_split:left
+keybind = alt+l=goto_split:right
+keybind = alt+k=goto_split:top
+keybind = alt+j=goto_split:bottom
+keybind = alt+z=toggle_split_zoom
