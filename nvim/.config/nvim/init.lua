@@ -7,6 +7,7 @@ vim.keymap.set('n', '<Leader><Leader><Leader><Leader>', ':e ~/.config/nvim/init.
 vim.opt.number = true
 vim.opt.cursorline = true
 
+vim.opt.expandtab = true
 vim.opt.shiftwidth = 4
 vim.opt.tabstop = 4
 vim.opt.ignorecase = true
@@ -26,16 +27,13 @@ vim.opt.shell = 'nu'
 vim.opt.shellcmdflag = '-c'
 vim.opt.shellquote = '\"'
 vim.opt.shellxquote = ''
---vim.o.laststatus = 2
---vim.o.cmdheight = 0
 
-vim.api.nvim_create_autocmd('FileType', {
-	pattern = 'json',
-	callback = function()
-		vim.opt_local.shiftwidth = 2
-		vim.opt_local.tabstop = 2
-	end
+-- Completely disable comment continuation on newlines
+vim.api.nvim_create_autocmd({ 'BufNewFile', 'BufRead', 'FileType' }, {
+	pattern = '*',
+	callback = function() vim.opt_local.formatoptions:remove({ 'r', 'o' }) end,
 })
+
 
 ----------------------------------------------------------------
 -- 💤 Lazy config
@@ -102,6 +100,7 @@ require('lazy').setup({
 	{ 'catgoose/nvim-colorizer.lua' },
 
 	-- LSP stuff
+	{ 'neovim/nvim-lspconfig' },
 	{ 'hrsh7th/nvim-cmp' },
 	{ 'hrsh7th/cmp-nvim-lsp' },
 	{ 'hrsh7th/cmp-buffer' },
@@ -243,7 +242,6 @@ require('lazy').setup({
 --require('nightfox').setup({})
 
 vim.opt.background = "dark"
--- colorscheme tokyonight-night
 vim.cmd [[
 colorscheme tokyonight-night
 ]]
@@ -305,8 +303,6 @@ end, { desc = 'Open file externally', buffer = true })
 
 
 vim.keymap.set('n', '-', '<CMD>Oil<CR>', { desc = 'Open parent directory' })
-
---vim.cmd(':Copilot disable')
 
 require('trouble').setup()
 
@@ -468,15 +464,6 @@ vim.api.nvim_create_autocmd("FileType", {
 	end,
 })
 
--- close term when process exits
--- vim.api.nvim_create_autocmd("TermClose", {
--- 	pattern = "*",
--- 	callback = function(opts)
--- 		-- close the buffer when the job ends
--- 		vim.api.nvim_buf_delete(opts.buf, { force = true })
--- 	end,
--- })
-
 ----------------------------------------------------------------
 -- 🔌 LSP config (native 0.11+)
 ----------------------------------------------------------------
@@ -625,14 +612,6 @@ vim.fn.sign_define('DapBreakpoint', { text = '⭕', texthl = '', })
 vim.fn.sign_define('DapStopped', { text = '🔴', texthl = '', })
 
 ----------------------------------------------------------------
--- After
-----------------------------------------------------------------
-vim.api.nvim_create_autocmd({ 'BufNewFile', 'BufRead', 'FileType' }, {
-	pattern = '*',
-	callback = function() vim.opt_local.formatoptions:remove({ 'r', 'o' }) end,
-})
-
-----------------------------------------------------------------
 --   other keybindings
 ----------------------------------------------------------------
 vim.keymap.set('n', '<C-n>', ':cnext<CR>', {})
@@ -672,4 +651,4 @@ vim.keymap.set('n', '<Down>', ':horizontal resize +5<CR>', { noremap = true, sil
 vim.keymap.set('n', '<Leader><Leader>s', ':vsplit | term<CR>')
 vim.keymap.set('n', '<Leader><Leader>b', ':b#<CR>')
 
-vim.keymap.set('n', '[T', 'tavatov', { noremap = true, silent = true })
+vim.keymap.set('n', '[T', 'vatov', { noremap = true, silent = true })
