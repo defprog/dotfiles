@@ -16,7 +16,7 @@
 #
 # You can remove these comments if you want or leave
 # them for future reference.
-
+$env.config.edit_mode = 'vi'
 $env.config.buffer_editor = '/usr/bin/nvim'
 $env.config.show_banner = false
 $env.config.history = {
@@ -25,6 +25,48 @@ $env.config.history = {
   sync_on_enter: false
   isolation: true
 }
+
+$env.config.menus ++= [{
+    name: history_menu
+    only_buffer_difference: false # Search is done on the text written after activating the menu
+    marker: "? "                 # Indicator that appears with the menu is active
+    type: {
+        layout: list             # Type of menu
+        page_size: 10            # Number of entries that will presented when activating the menu
+    }
+    style: {
+        text: green                   # Text style
+        selected_text: green_reverse  # Text style for selected option
+        description_text: yellow      # Text style for description
+    }
+}]
+
+$env.config.keybindings ++= [
+  {
+    name: history_down
+    modifier: control
+    keycode: char_j
+    mode: vi_insert
+    event: {
+      until: [
+        { send: menu name: history_menu }
+        { send: menunext }
+      ]
+    }
+  }
+  {
+    name: history_up
+    modifier: control
+    keycode: char_k
+    mode: vi_insert
+    event: {
+      until: [
+        { send: menu name: history_menu }
+        { send: menuprevious }
+      ]
+    }
+  }
+]
 
 use '/home/erw/.config/broot/launcher/nushell/br' *
 
@@ -47,4 +89,8 @@ def beep [] {
 		play -qn synth 0.025 sine 300
 		sleep 55sec
 	}
+}
+
+def nvless [] {
+  nvim -R -c 'set nomodifiable' -c 'nnoremap q :q<CR>' -
 }
