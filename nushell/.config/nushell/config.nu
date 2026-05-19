@@ -78,7 +78,6 @@ starship init nu | save -f ($nu.data-dir | path join "vendor/autoload/starship.n
 def brf [] {
 	br --cmd ":toggle_tree"
 }
-fastfetch
 
 def beep [] {
 	loop {
@@ -94,3 +93,5 @@ def beep [] {
 def nvless [] {
   nvim -R -c 'set nomodifiable' -c 'nnoremap q :q<CR>' -
 }
+
+fastfetch
